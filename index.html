@@ -1,3 +1,61 @@
 <!doctype html>
 
 <h1>hello</h1>
+
+<script>
+var ws = new WebSocket("ws://localhost:8080");
+ws.onopen = (function(){
+	doTask('join');
+});
+ws.onmessage = function(event){
+	var data = JSON.parse(event.data);
+	if('battery' in data){
+		document.getElementById("battery").innerHTML = data.battery;
+	}
+	if('heading' in data){
+		document.getElementById("heading").innerHTML = data.heading.toFixed(1);
+	}
+};
+
+function heading(){
+	return document.getElementById("setHeading").value*1;
+}
+function velocity(){
+	return document.getElementById("setVelocity").value*1;
+}
+
+function doTask(task){
+	var parameters = [];
+	for(var i=1; i<arguments.length; i++){
+		parameters.push(arguments[i]);
+	}
+	send({task:task, parameters: parameters});
+}
+
+function send(object){
+	ws.send(JSON.stringify(object));
+}
+</script>
+<button onclick="doTask('takeoff')">Takeoff</button>
+<button onclick="doTask('land')">Land</button>
+<button onclick="doTask('switch', '0')">Look forward</button>
+<button onclick="doTask('switch', '1')">Look down</button>
+<br>
+
+<label>keep heading</label>
+<input id="setHeading"></input>
+<button onclick="doTask('startKeepHeading', heading())">Start</button>
+<button onclick="doTask('stopKeepHeading')">Stop</button>
+<br>
+
+<label>keep velocity</label>
+<input id="setVelocity"></input>
+<button onclick="doTask('startKeepVelocity', velocity())">Start</button>
+<button onclick="doTask('stopKeepVelocity')">Stop</button>
+
+<br>
+Battery: <span id="battery"></span><br>
+Heading: <span id="heading"></span>
+<pre id="log">
+
+</pre>
