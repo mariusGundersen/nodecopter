@@ -19,10 +19,6 @@ var keepHeading = {
 	heading: 0,
 	on: function(heading){
 		if(this.active){
-			var currentDir = new Vector(heading);
-			var targetDir = new Vector(this.heading);
-
-
 			var diff = heading - this.heading;
 
 			if(diff < -180){
@@ -49,11 +45,13 @@ var keepVelocity = {
 	on: function(velocity){
 		if(this.active){
 			if(velocity < this.velocity){
-				current+=0.01;
+				this.current+=0.01;
 			}else{
-				current-=0.01;
+				this.current-=0.01;
 			}
-			client.forward(current);
+			this.current = Math.min(Math.max(this.current, 0), 1)
+			console.log(velocity, this.velocity, this.current);
+			client.front(this.current);
 		}
 	}
 }
@@ -83,9 +81,9 @@ var tasks = {
 		keepVelocity.active = true;
 		keepVelocity.velocity = velocity;
 	},
-	stopkeepVelocity: function(){
+	stopKeepVelocity: function(){
 		keepVelocity.active = false;
-		this.stop();
+		this.front(0);
 	}
 
 }
@@ -93,13 +91,12 @@ var tasks = {
 client
 	.on('navdata', function(navData){
 		var heading = normalizeHeading(navData.magneto.heading.unwrapped);
-		var velocity = navData.demo.velocityX;
+		var velocity = navData.demo.zVelocity;
 		battery = navData.demo.batteryPercentage;
 
 		sockets.forEach(function(socket){
   			socket.send(JSON.stringify({heading: heading}));
 		});
-
 
 		keepHeading.on(heading);
 
